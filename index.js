@@ -1,7 +1,6 @@
 const express = require('express')
 const path = require('path')
 const sql = require('mssql')
-const axios = require('axios');
 const PORT = process.env.PORT || 5000
 
 express()
@@ -11,40 +10,43 @@ express()
  
   .get('/', (req, res) =>{
   
-
-const knex = require('knex')({
-    client:'mssql',
-    connection:{
+const config = {
+        server: "87.202.130.138",
         port:1433,
-        user:"sa",
+        user:"pca",
         password:"Puxa3418",
-        server:"87.202.130.138",
         database:"PCADB",
-        options:{
+        options: {
             encrypt: false,
             enableArithAbort:true,
             trustServerCertificate: true,
-            },
-            secure : false,
-            pool:{
-                max:10,
-                min:0,
-                idleTimeoutMillis:3000
-            },
-            rejectUnauthorized: false
+        },
+        comectionTimeout: 15000,
+        pool:{
+            min:0,
+            max:10,
+            idleTimeoutMillis:30000,
+        }
+    };
+
+     
+
+sql.on('error',err=>{
+    res.send(err);
+})
+getDbConnection();
+async function getDbConnection(){
+    try{
+        let pool = await (await sql.connect(config)).connect()
+        let quety =  await pool.query('select name from trdr');
+        res.send(quety);
+        sql.close();
     }
-})
-
-
-knex.select('name').from('trdr')
-.then(resData=>{
-    res.send(resData);
-}).catch(err=>{
-   res.send(err.message);
-}).finally(done=>{
-        console.log("ola kala")
-})
-;
+    catch(err){
+        res.send(err);
+    
+}
+}
 
 
       
